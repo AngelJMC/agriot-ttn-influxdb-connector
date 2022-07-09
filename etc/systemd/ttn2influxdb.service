@@ -1,0 +1,14 @@
+[Unit]
+Description=ttn2influxdb - Subscribes to the MQTT broker of The Things Network and saves incoming data into InfluxDB.
+Documentation=https://github.com/AngelJMC/agriot-ttn-influxdb-connector
+After=network.target
+
+[Service]
+User=angel
+ExecStart=ttn2influxd 
+KillMode=control-group
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+Alias=ttn2influxdb.service
