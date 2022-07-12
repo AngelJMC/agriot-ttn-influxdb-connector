@@ -5,7 +5,9 @@ After=network.target
 
 [Service]
 User=angel
-ExecStart=ttn2influxd 
+Group=daemon
+LimitNOFILE=65536
+ExecStart=/opt/ttn2influxdb/bin/ttn2influxdb --dir /opt/ttn2influxdb/
 KillMode=control-group
 Restart=on-failure
 

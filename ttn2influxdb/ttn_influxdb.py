@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # (c) 2022 Angel Maldonado <angelgesus@gmail.com>
 # License: GNU Affero General Public License, Version 3
-import os
+import logging
+import sys
 import json
 from influxdb import InfluxDBClient
 import paho.mqtt.client as mqtt
@@ -11,6 +12,14 @@ import threading
 from pathlib import Path
 
 
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="[%(levelname)s] %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 
 class TTNClient:
 
@@ -23,14 +32,13 @@ class TTNClient:
         self.msg_process = callback_msg
         self.connected = False
         
-        
 
     def loop_forever(self):
         self.mqtt_client.loop_forever()
  
 
     def connect(self):
-        print('Connecting to TTN MQTT broker')
+        logging.info('Connecting to TTN MQTT broker')
 
         # Start MQTT client and wire event callbacks.
         self.mqtt_client = mqtt.Client()
@@ -42,7 +50,7 @@ class TTNClient:
         
 
     def connect_callback(self, client, userdata, flags, rc):
-        print('Connected with result code '+str(rc))
+        logging.info('Connected with result code '+str(rc))
         client.subscribe('v3/+/devices/+/up')
 
     #def disconnect_callback(self, res, client):
@@ -86,7 +94,7 @@ class InfluxDatabase:
 
         # Pick up telemetry values from gateway information.
         num_gtws = len(ttn_message['uplink_message']['rx_metadata'] )
-        print('Message received from ' + str(num_gtws) + ' gateway(s)')
+        logging.debug('Message received from ' + str(num_gtws) + ' gateway(s)')
         data['rssi'] = 0
         data['snr'] = 0.0
 
@@ -114,7 +122,7 @@ class InfluxDatabase:
             "fields": data,
         }
 
-        print(point)
+        logging.debug(point)
         self.client.write_points([point])
 
 
@@ -145,11 +153,12 @@ def run():
     args = parser.parse_args()
     
     #Loop for all .ini file in directory
+
     p = Path(args.dir)
-    print(p.name)
+    logging.debug(p.name)
     threads = []
     for file in list(p.glob('*.ini')):
-        print('Load configuration file: ' + file.name)
+        logging.info('Load configuration file: ' + file.name)
         # multiprocessing support
         config = ConfigParser()
         config.read(file)

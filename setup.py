@@ -38,8 +38,7 @@ setup(name='ttn2influxdb',
       keywords= 'ttn mqtt influxdb',
       packages=find_packages(),
       include_package_data=True,
-      package_data={
-      },
+      package_data={'ttn2influxdb': ['connections/*.ini']},
       zip_safe=False,
       install_requires= [ 'influxdb', 'paho-mqtt', 'configparser'],
       entry_points={
