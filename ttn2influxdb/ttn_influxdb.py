@@ -38,7 +38,7 @@ class TTNClient:
  
 
     def connect(self):
-        logging.info('Connecting to TTN MQTT broker')
+        logging.info('Connecting to TTN MQTT broker: '+self.url+':'+str(self.port)+', app_id: '+self.app_id)
 
         # Start MQTT client and wire event callbacks.
         self.mqtt_client = mqtt.Client()
@@ -47,11 +47,13 @@ class TTNClient:
         self.mqtt_client.tls_set()
         self.mqtt_client.username_pw_set(self.app_id, password=self.access_key)
         self.mqtt_client.connect(self.url, self.port, 60)
+        self.topic = 'v3/+/devices/+/up'
         
 
     def connect_callback(self, client, userdata, flags, rc):
-        logging.info('Connected with result code '+str(rc))
-        client.subscribe('v3/+/devices/+/up')
+        
+        logging.info('Connected to '+self.app_id+' with result code '+str(rc)+'. Topic: '+self.topic)
+        client.subscribe( self.topic )
 
     #def disconnect_callback(self, res, client):
     #    address = client._MQTTClient__mqtt_address
@@ -82,51 +84,63 @@ class InfluxDatabase:
 
 
     def store(self, ttn_message):
-
-        timestamp = ttn_message['received_at']
-
+        try:
+            timestamp = ttn_message['received_at']
+        except:
+            logging.error('No timestamp in message')
+            logging.debug(timestamp)
+            return
+        
         # Add application and device id as tags.
-        tags = dict()
-        tags['dev_id'] = ttn_message['end_device_ids']['device_id']
-        tags['dev_addr'] = ttn_message['end_device_ids']['dev_addr']
+        try:
+            tags = {
+                'dev_id': ttn_message['end_device_ids']['device_id'], 
+                'dev_addr': ttn_message['end_device_ids']['dev_addr']
+            }
+        except:
+            logging.error('No tags in message')
+            logging.debug(tags)
+            return
 
-        data = dict()
+        try:
+            data = dict()
 
-        # Pick up telemetry values from gateway information.
-        num_gtws = len(ttn_message['uplink_message']['rx_metadata'] )
-        logging.debug('Message received from ' + str(num_gtws) + ' gateway(s)')
-        data['rssi'] = 0
-        data['snr'] = 0.0
+            # Pick up telemetry values from gateway information.
+            num_gtws = len(ttn_message['uplink_message']['rx_metadata'] )
+            logging.debug('Message received from ' + str(num_gtws) + ' gateway(s)')
+            data['rssi'] = 0
+            data['snr'] = 0.0
+            
+            for i in range(num_gtws):
+                snr = float(ttn_message['uplink_message']['rx_metadata'][i]['snr'])
+                if snr > data['snr']:         
+                    data['rssi'] = int(ttn_message['uplink_message']['rx_metadata'][i]['rssi'])
+                    data['snr']  = snr
 
-        for i in range(num_gtws):
-            snr = float(ttn_message['uplink_message']['rx_metadata'][i]['snr'])
-            if snr > data['snr']:         
-                data['rssi'] = int(ttn_message['uplink_message']['rx_metadata'][i]['rssi'])
-                data['snr']  = snr
+            # Pick up telemetry values from main data payload.
+            payload = ttn_message['uplink_message']['decoded_payload']
+            logging.debug(payload)
+            for field in payload:
+                value = payload[field]                 
+                if dict == type(value):
+                    for fild in value:
+                        data[fild] = float(value[fild])
+                else:
+                    data[field] = float(value)
+        except:
+            logging.error('No payload in message')
+            logging.debug(data)
+            return
 
-        # Pick up telemetry values from main data payload.
-        payload = ttn_message['uplink_message']['decoded_payload']
-        for field in payload:
-            value = payload[field]
-            if float == type(value):
-                data[field] = value 
-            elif dict == type(value):
-                for fild in value:
-                    if float == type(value[fild]):
-                        data[fild] = value[fild]
-  
         point = {
-            "measurement": self.measurement,
-            "tags": tags,
-            "time": timestamp,
-            "fields": data,
+            'measurement': self.measurement,
+            'tags': tags,
+            'time': timestamp,
+            'fields': data,
         }
 
         logging.debug(point)
         self.client.write_points([point])
-
-
-
 
 class connector:
 
