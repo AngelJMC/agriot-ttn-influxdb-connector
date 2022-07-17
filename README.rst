@@ -2,9 +2,6 @@
 ttn2influxdb
 #########
 
-********
-About
-********
 
 Python program to subscribes to the MQTT broker of The Things Network (v3 stack) and saves incoming data into InfluxDB.
 
@@ -33,6 +30,7 @@ The configuration file contains the basic parameters to establish a connection t
         database = 
         measurement = 
 
+More than one configuration file can be added to establish different connections to the MQTT broker.
 
 *****
 Setup
