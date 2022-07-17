@@ -7,7 +7,7 @@ After=network.target
 User=angel
 Group=daemon
 LimitNOFILE=65536
-ExecStart=/opt/ttn2influxdb/bin/ttn2influxdb --dir /opt/ttn2influxdb/
+ExecStart=/opt/ttn2influxdb/pyenv/bin/ttn2influxdb --dir /opt/ttn2influxdb/connections/
 KillMode=control-group
 Restart=on-failure
 
