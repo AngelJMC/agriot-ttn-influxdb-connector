@@ -1,0 +1,4 @@
+*.pyc
+ttn2influxdb.egg-info/*
+dist/*
+build/*
