@@ -1,18 +1,10 @@
-#########
-ttn2influxdb
-#########
-
-
 Python program to subscribes to the MQTT broker of The Things Network (v3 stack) and saves incoming data into InfluxDB.
 
 TTN (`The Things Network`_) is building a global open LoRaWAN™ network.
 
-
-
-
-
+******************
 Configuration file
----------------------
+******************
 The configuration file contains the basic parameters to establish a connection to The Things Network's MQTT broker and the influxdb database. The schema of this file is as follows:
 ::
 
@@ -38,6 +30,7 @@ Setup
 
 Clone the repository and create a new python virtual environment in which to install the ttn2influxdb package.
 ::
+
     git clone https://github.com/AngelJMC/agriot-ttn-influxdb-connector
     cd agriot-ttn-influxdb-connector
     sudo python3 -m venv /opt/ttn2influxdb/pyenv
@@ -46,6 +39,7 @@ Clone the repository and create a new python virtual environment in which to ins
 
 Copy the configuration file to the installation directory and add the configuration parameters.
 ::
+
     # Copy configurations
     sudo mkdir /opt/ttn2infuxdb/connections
     sudo cp connections/config-example.ini /opt/ttn2influxdb/connections
@@ -56,6 +50,7 @@ Copy the configuration file to the installation directory and add the configurat
 
 Configure program execution
 ::
+
     sudo cp etc/systemd/ttn2influxdb.service /opt/ttn2influxdb
     ln -sr /opt/ttn2influxdb/ttn2influxdb.service /usr/lib/systemd/system/
     
